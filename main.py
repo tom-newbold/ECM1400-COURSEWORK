@@ -19,7 +19,8 @@ from covid_news_handling import update_news, remove_title, schedule_news_updates
 import covid_news_handling # for globals
 
 update_covid_data()
-update_news(sch=False)
+search_terms = load(open('config.json','r'))['news_search_terms']
+update_news(search_terms,sch=False)
 
 updates = []
 news_articles = []
@@ -66,7 +67,7 @@ def index():
             logger_main.info('covid stats update scheduled')
             # schedules covid data updates
         if update_args.get('news'):
-            covid_news_handling.schedule_news_updates(time_diff_s,update_args.get('two'),r)
+            covid_news_handling.schedule_news_updates(time_diff_s,update_args.get('two'),search_terms,r)
             logger_main.info('covid news update scheduled')
             # schedules covid news story updates
         #else:
@@ -76,7 +77,7 @@ def index():
     if update_args.get('notif'):
         remove_title(update_args.get('notif')) # add title to removed_titles (so not displayed)
         logger_main.info('news story removed from interface')
-        update_news(sch=False) # updates to fill article list
+        update_news(search_terms,sch=False) # updates to fill article list
         return redirect(url_for('index')) # refreshes interface
     ## cancelling scheduled updates
     if update_args.get('update_item'):
