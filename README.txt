@@ -7,4 +7,4 @@ def function_name(*args):
 			argument_name[type] : argument description
 		> return
 			return_value(s)[type] : value description(s)
-types - int, str, float, bool, list, dict
+types - int, str, float, bool, list, dict, tuple
