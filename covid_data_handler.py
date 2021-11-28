@@ -8,11 +8,25 @@ logger_cdh = logging.getLogger(__name__)
 logging.basicConfig(filename=os.getcwd()+load(open('config.json','r'))['log_file_path'],filemode='w',format=FORMAT,level=logging.INFO)
 
 def parse_csv_data(csv_filename):
-    '''return list of strings for rows in the file'''
+    '''return list of strings for rows in the file
+        > args
+            csv_filename[str] : filename of static csv file
+        > returns
+            [list] : lines in file
+    '''
     return [line.strip('\n') for line in open(csv_filename, 'r').readlines()]
 
 def process_covid_csv_data(covid_csv_data):
-    '''extract covid stats from csv (as returned from the previous function)'''
+    '''extract covid stats from csv format
+        > args
+            covid_csv_data[list] : list of lines from covid data csv - as returned from parse_csv_data
+        > returns
+            [tuple] : (
+                last7days_cases_total[int]  : summative latest week case count
+                current_hospital_cases[int] : current hospital cases
+                total_deaths[int]           : latest death toll
+            )
+    '''
     last7days_cases = []
     i = 1
     prev_empty = True
@@ -51,7 +65,25 @@ def process_covid_csv_data(covid_csv_data):
 from uk_covid19 import *
 from json import load
 def covid_API_request(location, location_type):
-    '''returns a json containing the set of metrics detailed below'''
+    '''returns a json containing the set of metrics detailed in metrics[dict]
+        > args
+            location[str]      : area code for api request
+            location_type[str] : area type for api request
+        > returns
+            [dict] : {
+                data[list][dict] : {
+                    date[str]                     : [format YYYY-MM-DD]
+                    areaName[string]              : as specifed in area[list][str]
+                    areaType[string]              : see above
+                    newCasesByPublishDate[int]    : case count
+                    cumDeaths28ByPublishDate[int] : death toll
+                    hospitalCases[int]            : hospital cases
+                }
+                lastUpdate[str]  : time of latest entry [format YYYY-MM-DDtime]
+                length[int]      : number of entries fetched from api
+                totalPages[int]  : number of pages fetched from api
+            }
+    '''
     area = ['areaType='+location_type, 'areaName='+location]
     metrics = {
         'date': 'date',
@@ -69,7 +101,16 @@ def covid_API_request(location, location_type):
 ## extra functions ----------------------------------------
 
 def get_stats_from_json(covid_stats_json, metric, count=1, skip=False):
-    '''extracts the requested metric from a json (returned from the covid API)'''
+    '''extracts the specified metric from a json (returned from the covid API)
+        > args
+            covid_stats_json[dict] : raw json - as returned from covid_API_request
+            metric[str]            : stat to extract
+            count[int]             : number of entries to cache (used for 7 day sums)
+            skip[bool]             : flag for skiping first entry (more accurate for certain metrics)
+        > returns
+            [str] : area code associated with api request
+            [int] : extracted value
+    '''
     csj = covid_stats_json['data']
     data = []
     i = 0
@@ -85,7 +126,17 @@ def get_stats_from_json(covid_stats_json, metric, count=1, skip=False):
     return csj[0]['areaName'], sum(data)
 
 def get_covid_stats():
-    '''fetches relevant statistics to be displayed in the interface'''
+    '''fetches relevant statistics to be displayed in the interface
+        > returns
+            [tuple] : (
+                area[str]                   : local area code - stored in config.json
+                last7days_cases_local[int]  : summative previous week case count (local)
+                nation[str]                 : nation area code - stored in config.json
+                last7days_cases_nation[int] : summative previous week case count (nation)
+                hospital_cases[int]         : current hospital cases
+                total_deaths[int]           : cumulative death toll
+            )
+    '''
     location_local = load(open('config.json','r'))['location']
     location_type = load(open('config.json','r'))['location_type']
     logger_cdh.info('location fetched from config file')
@@ -103,6 +154,7 @@ covid_data_sch = {}
 logger_cdh.info('covid data globals initialized')
 
 def update_covid_data():
+    '''updates the covid_data data structure (global) with the latest stats'''
     global covid_data
     covid_data = get_covid_stats()
     logger_cdh.info('covid stats updated [covid_data=%s]', covid_data)
@@ -110,13 +162,21 @@ def update_covid_data():
 import sched
 from time import time, sleep
 def sched_covid_update_repeat(sch):
-    '''uses recrsion to implement 24 hour repeating updates'''
+    '''uses recursion to implement 24 hour repeating updates
+        > args
+            sch[sched.scheduler] : associated scheduler
+    '''
     sch.enter(24*60*60, 1, update_covid_data)
     if len(sch.queue) < 30:
         sch.enter(24*60*60, 2, sched_covid_update_repeat, argument=(s))
 
 def schedule_covid_updates(update_interval, update_name, repeating=False):
-    '''creates scheduler for scheduling updates'''
+    '''creates scheduler (stored in covid_data_sch) and schedules news updates
+        > args
+            update_interval[float] : delay of (initial) scheduled update
+            update_name[str]       : label of update in interface - index of scheduler in covid_data_sch
+            repeating[bool]        : flag for repeating updates (every 24 hours)
+    '''
     global covid_data_sch
     s = sched.scheduler(time, sleep)
     s.enter(update_interval, 1, update_covid_data)
@@ -126,4 +186,4 @@ def schedule_covid_updates(update_interval, update_name, repeating=False):
     covid_data_sch[update_name] = s
 
 if __name__=='__main__':
-    print(get_covid_stats())    
+    print(get_covid_stats()) # current covid stats
