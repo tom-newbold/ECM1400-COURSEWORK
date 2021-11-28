@@ -78,44 +78,5 @@ def schedule_news_updates(update_interval, update_name, search_terms, repeating=
         s.enter(update_interval, 2, sched_news_update_repeat, argument=(s, search_terms))
     covid_news_sch[update_name] = s
 
-
-# \/ remove this class
-class covid_news_:
-    '''data structure for storing news stories'''
-    def __init__(self):
-        self.articles = []
-        self.removed_titles = []
-
-    def format_news_article(self, article_json):
-        '''formats news article from json to dictionary which can be input into flask template'''
-        return {'title':article_json['title'],'content':Markup(article_json['description']+
-            '<a href=\"{url}\">{source}</a>'.format(url=article_json['url'],source=article_json['source']['name']))}
-
-    def remove_title(self, title):
-        '''adds article to list of removed, so it is not redisplayed'''
-        if title not in self.removed_titles:
-            self.removed_titles.append(title)
-            logger_cnh.info('news story removed')
-
-    def purge_articles(self):
-        for a in self.articles: # remove all currently displayed articles
-            self.remove_title(a['title'])
-
-    def update_news(self, article_count=10, sch=True):
-        '''updates the news data structure with the latest articles'''
-        if sch:
-            self.purge_articles()
-        api = news_API_request('Covid COVID-19 coronavirus',article_count+len(self.removed_titles))
-        self.articles = []
-        i = 0
-        while len(self.articles) < article_count:
-            if i >= len(api):
-                logger_cnh.warning('articles list exhasted')
-                break
-            if api[i]['title'] not in self.removed_titles:
-                self.articles.append(self.format_news_article(api[i]))
-            i += 1
-        logger_cnh.info('covid news updated')
-
 if __name__=='__main__':
     print(news_API_request('Covid COVID-19 coronavirus')[0]) # print first result

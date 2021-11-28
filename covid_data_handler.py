@@ -107,20 +107,6 @@ def update_covid_data():
     covid_data = get_covid_stats()
     logger_cdh.info('covid stats updated [covid_data=%s]', covid_data)
 
-
-# \/ remove this class
-class covid_data_:
-    '''data structure for storing covid data'''
-    def __init__(self):
-        self.stats = []
-
-    def update_covid_data(self):
-        '''updates the stats data structure with the latest covid stats'''
-        self.stats = get_covid_stats()
-        logger_cdh.info('covid stats updated')
-
-## extra functions ----------------------------------------
-
 import sched
 from time import time, sleep
 def sched_covid_update_repeat(sch):
