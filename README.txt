@@ -1,0 +1,1 @@
+rename template_config.json to config.json when adding api key

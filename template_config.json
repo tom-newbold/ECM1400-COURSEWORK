@@ -1,0 +1,8 @@
+{
+	"location" : "Exeter",
+	"location_type" : "ltla",
+	"api_keys" : {
+		"news_api" : "[api-key]"
+	},
+	"log_file_path": "\\__log__\\dashboard_log.log"
+}
