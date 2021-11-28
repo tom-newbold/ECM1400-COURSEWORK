@@ -43,12 +43,12 @@ def purge_articles():
     for a in covid_news: # remove all currently displayed articles
         remove_title(a['title'])
 
-def update_news(article_count=10, sch=True):
+def update_news(covid_terms, article_count=10, sch=True):
     '''updates the news data structure with the latest articles'''
     global covid_news, removed_titles
     if sch:
         purge_articles()
-    api = news_API_request('Covid COVID-19 coronavirus',article_count+len(removed_titles))
+    api = news_API_request(covid_terms,article_count+len(removed_titles))
     covid_news = []
     i = 0
     while len(covid_news) < article_count:
@@ -62,13 +62,20 @@ def update_news(article_count=10, sch=True):
 
 import sched
 from time import time, sleep
-def schedule_news_updates(update_interval, update_name, repeating=False):
+def sched_news_update_repeat(sch, search_terms):
+    '''uses recrsion to implement 24 hour repeating updates'''
+    sch.enter(24*60*60, 1, update_news, argument=(search_terms))
+    if len(sch.queue) < 30:
+        sch.enter(24*60*60, 2, sched_news_update_repeat, argument=(s))
+
+def schedule_news_updates(update_interval, update_name, search_terms, repeating=False):
     '''creates scheduler for scheduling updates'''
     global covid_news_sch
     s = sched.scheduler(time, sleep)
-    s.enter(update_interval, 1, update_news)
+    s.enter(update_interval, 1, update_news, argument=(search_terms))
     if repeating: # schedules a repeating update in 24 hours (this is recursive)
-        s.enter(update_interval, 1, s.enter, argument=(24*60*60, 1, update_news, True))
+        #s.enter(update_interval, 1, s.enter, argument=(24*60*60, 1, update_news), kwargs={'argument':search_terms})
+        s.enter(update_interval, 2, sched_news_update_repeat, argument=(s, search_terms))
     covid_news_sch[update_name] = s
 
 

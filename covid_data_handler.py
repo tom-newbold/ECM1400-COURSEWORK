@@ -123,13 +123,20 @@ class covid_data_:
 
 import sched
 from time import time, sleep
+def sched_covid_update_repeat(sch):
+    '''uses recrsion to implement 24 hour repeating updates'''
+    sch.enter(24*60*60, 1, update_covid_data)
+    if len(sch.queue) < 30:
+        sch.enter(24*60*60, 2, sched_covid_update_repeat, argument=(s))
+
 def schedule_covid_updates(update_interval, update_name, repeating=False):
     '''creates scheduler for scheduling updates'''
     global covid_data_sch
     s = sched.scheduler(time, sleep)
     s.enter(update_interval, 1, update_covid_data)
     if repeating: # schedules a repeating update in 24 hours (this is recursive)
-        s.enter(update_interval, 1, s.enter, argument=(24*60*60, 1, update_covid_data, True))
+        #s.enter(update_interval, 1, s.enter, argument=(24*60*60, 1, update_covid_data, True))
+        s.enter(update_interval, 2, sched_covid_update_repeat, argument=(s))
     covid_data_sch[update_name] = s
 
 if __name__=='__main__':
