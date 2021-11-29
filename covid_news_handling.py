@@ -8,7 +8,7 @@ FORMAT = '%(levelname)s @ %(name)s [%(asctime)s]: %(message)s'
 logger_cnh = logging.getLogger(__name__)
 logging.basicConfig(filename=os.getcwd()+load(open('config.json','r'))['log_file_path'],filemode='w',format=FORMAT,level=logging.INFO)
 
-def news_API_request(covid_terms,page_size=20):
+def news_API_request(covid_terms=load(open('config.json','r'))['news_search_terms'],page_size=20):
     ''' get covid-related news stories from the news api
         > args
             covid_terms[str] : search terms for api request

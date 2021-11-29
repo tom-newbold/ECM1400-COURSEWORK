@@ -64,7 +64,7 @@ def process_covid_csv_data(covid_csv_data):
 # arguments will be stored in config file
 from uk_covid19 import *
 from json import load
-def covid_API_request(location, location_type):
+def covid_API_request(location=load(open('config.json','r'))['location'], location_type=load(open('config.json','r'))['location_type']):
     '''returns a json containing the set of metrics detailed in metrics[dict]
         > args
             location[str]      : area code for api request
@@ -137,11 +137,9 @@ def get_covid_stats():
                 total_deaths[int]           : cumulative death toll
             )
     '''
-    location_local = load(open('config.json','r'))['location']
-    location_type = load(open('config.json','r'))['location_type']
-    logger_cdh.info('location fetched from config file')
-    api_local = covid_API_request(location_local,location_type)
+    api_local = covid_API_request()
     api_nation = covid_API_request('England','nation')
+    logger_clogger_cdh.info('api requests complete')
     area, last7days_cases_local = get_stats_from_json(api_local, 'newCasesByPublishDate', 7, True)
     nation, last7days_cases_nation = get_stats_from_json(api_nation, 'newCasesByPublishDate', 7, True)
     hospital_cases = get_stats_from_json(api_nation, 'hospitalCases')[1]
