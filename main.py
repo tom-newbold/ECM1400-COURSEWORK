@@ -1,3 +1,11 @@
+'''
+This module handles:
+    > the main flask application
+    > incoming client requests
+        (leading to scheduling/cancelling updates)
+    > updates to the interface (by passsing values into the template)
+'''
+
 ## imports
 from json import load
 import os
@@ -9,7 +17,9 @@ import logging
 ## logging setup
 FORMAT = '%(levelname)s @ %(name)s [%(asctime)s]: %(message)s'
 logger_main = logging.getLogger('dashboard')
-logging.basicConfig(filename=os.getcwd()+load(open('config.json','r'))['log_file_path'],filemode='w',format=FORMAT,level=logging.INFO)
+with open('config.json','r') as config:
+    logging.basicConfig(filename=os.getcwd()+load(config)['log_file_path'],
+                        filemode='w',format=FORMAT,level=logging.INFO)
 # debug, info, warning, error, critical
 
 ## from handler modules
