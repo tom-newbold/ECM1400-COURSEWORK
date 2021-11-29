@@ -1,3 +1,18 @@
+'''
+This module handles:
+    > news-api requests
+    > fetching (and formatting) new news stories
+    > scheduling these news updates
+[function summary]
+covid_news_handling.news_API_request() : utilises the requests module to request news stories
+                   .format_news_article() : injects article information into a format compatible with the interface
+                   .remove_title() : marks an article as "seen"
+                   .purge_articles() : calls remove_title on all currently displayed articles
+                   .update_news() : updates a global data structure with (formatted) news articles
+                   .sched_news_update_repeat() : recursively schedules update_news every 24 hours
+                   .schedule_news_updates() : schedules update_news after an interval
+'''
+
 from json import load
 import requests
 import os

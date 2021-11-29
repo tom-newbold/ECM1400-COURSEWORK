@@ -1,3 +1,19 @@
+'''
+This module handles:
+    > uk-covid-19 api requests
+    > fetching up to date stats
+    > scheduling these stats updates
+[function summary]
+covid_data_handler.parse_csv_data() : see below
+                  .process_csv_data() : used in conjunction to extract data from a static file
+                  .covid_API_request() : utilises the uk_covid19 module to request data
+                  .get_stats_from_json() : extracts a specific metric from json returned from the above function
+                  .get_covid_stats() : utilises the previous function to get a set of metrics for the interface
+                  .update_covid_data() : updates a global data structure with the output of the previous function
+                  .sched_covid_update_repeat() : recursively schedules update_covid_data every 24 hours
+                  .schedule_covid_updates() : schedules update_covid_data after an interval
+'''
+
 from json import load
 import os
 import logging
