@@ -21,7 +21,9 @@ import logging
 ## logging setup
 FORMAT = '%(levelname)s @ %(name)s [%(asctime)s]: %(message)s'
 logger_cdh = logging.getLogger(__name__)
-logging.basicConfig(filename=os.getcwd()+load(open('config.json','r'))['log_file_path'],filemode='w',format=FORMAT,level=logging.INFO)
+with open('config.json','r') as config:
+    logging.basicConfig(filename=os.getcwd()+load(config)['log_file_path'],
+                        filemode='w',format=FORMAT,level=logging.INFO)
 
 def parse_csv_data(csv_filename):
     '''return list of strings for rows in the file
@@ -80,7 +82,7 @@ def process_covid_csv_data(covid_csv_data):
 # arguments will be stored in config file
 from uk_covid19 import *
 from json import load
-def covid_API_request(location=load(open('config.json','r'))['location'], location_type=load(open('config.json','r'))['location_type']):
+def covid_API_request(location=None, location_type=None):
     '''returns a json containing the set of metrics detailed in metrics[dict]
         > args
             location[str]      : area code for api request
@@ -100,6 +102,14 @@ def covid_API_request(location=load(open('config.json','r'))['location'], locati
                 totalPages[int]  : number of pages fetched from api
             }
     '''
+    with open('config.json','r') as config:
+        config_json = load(config)
+        if not location:
+            location = config_json['location']
+            logger_cdh.info('location fetched from config file')
+        if not location_type:
+            location_type = config_json['location_type']
+            logger_cdh.info('location_type fetched from config file')
     area = ['areaType='+location_type, 'areaName='+location]
     metrics = {
         'date': 'date',
@@ -155,7 +165,7 @@ def get_covid_stats():
     '''
     api_local = covid_API_request()
     api_nation = covid_API_request('England','nation')
-    logger_clogger_cdh.info('api requests complete')
+    logger_cdh.info('api requests complete')
     area, last7days_cases_local = get_stats_from_json(api_local, 'newCasesByPublishDate', 7, True)
     nation, last7days_cases_nation = get_stats_from_json(api_nation, 'newCasesByPublishDate', 7, True)
     hospital_cases = get_stats_from_json(api_nation, 'hospitalCases')[1]

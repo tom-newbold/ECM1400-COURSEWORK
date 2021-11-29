@@ -21,9 +21,11 @@ import logging
 ## logging setup
 FORMAT = '%(levelname)s @ %(name)s [%(asctime)s]: %(message)s'
 logger_cnh = logging.getLogger(__name__)
-logging.basicConfig(filename=os.getcwd()+load(open('config.json','r'))['log_file_path'],filemode='w',format=FORMAT,level=logging.INFO)
+with open('config.json','r') as config:
+    logging.basicConfig(filename=os.getcwd()+load(config)['log_file_path'],
+                        filemode='w',format=FORMAT,level=logging.INFO)
 
-def news_API_request(covid_terms=load(open('config.json','r'))['news_search_terms'],page_size=20):
+def news_API_request(covid_terms=None,page_size=20):
     ''' get covid-related news stories from the news api
         > args
             covid_terms[str] : search terms for api request
@@ -51,8 +53,12 @@ def news_API_request(covid_terms=load(open('config.json','r'))['news_search_term
                 message[str] : error description
             }
     '''
-    _APIkey = load(open('config.json','r'))['api_keys']['news_api'] # get api key from config.json
-    logger_cnh.info('API key fetched from config file')
+    with open('config.json','r') as config:
+        config_json = load(config)
+        if not covid_terms:
+            covid_terms = config_json['news_search_terms']
+        _APIkey = config_json['api_keys']['news_api'] # get api key from config.json
+        logger_cnh.info('API key fetched from config file')
     keywords = covid_terms.split(' ')
     url = 'https://newsapi.org/v2/everything?q='+'+OR+'.join(keywords)+'&pageSize='+str(page_size)+'&apiKey='+_APIkey
     response = requests.get(url, auth=('user','pass')) # request related stories from newsAPI
