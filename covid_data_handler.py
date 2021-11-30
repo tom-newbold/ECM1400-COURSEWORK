@@ -191,8 +191,9 @@ def sched_covid_update_repeat(sch):
             sch[sched.scheduler] : associated scheduler
     '''
     sch.enter(24*60*60, 1, update_covid_data)
-    if len(sch.queue) < 30:
-        sch.enter(24*60*60, 2, sched_covid_update_repeat, argument=(s))
+    #if len(sch.queue) < 30:
+    sch.enter(24*60*60, 2, sched_covid_update_repeat, argument=(sch,))
+    logger_cdh.info('repeat update scheduled')
 
 def schedule_covid_updates(update_interval, update_name, repeating=False):
     '''creates scheduler (stored in covid_data_sch) and schedules news updates
@@ -204,9 +205,8 @@ def schedule_covid_updates(update_interval, update_name, repeating=False):
     global covid_data_sch
     s = sched.scheduler(time, sleep)
     s.enter(update_interval, 1, update_covid_data)
-    if repeating: # schedules a repeating update in 24 hours (this is recursive)
-        #s.enter(update_interval, 1, s.enter, argument=(24*60*60, 1, update_covid_data, True))
-        s.enter(update_interval, 2, sched_covid_update_repeat, argument=(s))
+    if repeating: # will schedule a repeating update in after the interval
+        s.enter(update_interval, 2, sched_covid_update_repeat, argument=(s,))
     covid_data_sch[update_name] = s
 
 if __name__=='__main__':

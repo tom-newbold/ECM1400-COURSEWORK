@@ -100,13 +100,16 @@ def purge_articles():
     for a in covid_news:
         remove_title(a['title'])
 
-def update_news(covid_terms, article_count=10, sch=True):
+def update_news(covid_terms=None, article_count=10, sch=True):
     '''updates the covid_news data structure (global) with the latest articles
         > args
             covid_terms[str]   : search terms for news_api request - stored in config.json
             article_count[int] : number of articles to be displayed in the interface
             sch[bool]          : flag for scheduled (over intermittent) updates
     '''
+    with open('config.json','r') as config:
+        if not covid_terms:
+            covid_terms = load(config)['news_search_terms']
     global covid_news, removed_titles
     if sch:
         purge_articles()
@@ -124,29 +127,30 @@ def update_news(covid_terms, article_count=10, sch=True):
 
 import sched
 from time import time, sleep
-def sched_news_update_repeat(sch, search_terms):
+def sched_news_update_repeat(sch):
     '''uses recursion to implement 24 hour repeating updates
         > args
             sch[sched.scheduler] : associated scheduler
-            search_terms[str]    : string containing search terms for news_api request
     '''
-    sch.enter(24*60*60, 1, update_news, argument=(search_terms))
-    if len(sch.queue) < 30:
-        sch.enter(24*60*60, 2, sched_news_update_repeat, argument=(s))
+    sch.enter(24*60*60, 1, update_news)
+    #if len(sch.queue) < 30:
+    sch.enter(24*60*60, 2, sched_news_update_repeat, argument=(sch,))
+    logger_cnh.info('repeat update scheduled ')
 
-def schedule_news_updates(update_interval, update_name, search_terms, repeating=False):
+def schedule_news_updates(update_interval, update_name, repeating=False, search_terms=None):
     '''creates scheduler (stored in covid_news_sch) and schedules news updates
         > args
             update_interval[float] : delay of (initial) scheduled update
             update_name[str]       : label of update in interface - index of scheduler in covid_news_sch
-            search_terms[str]      : search terms for news_api request
             repeating[bool]        : flag for repeating updates (every 24 hours)
+            search_terms[str]      : search terms for news_api request
     '''
     global covid_news_sch
     s = sched.scheduler(time, sleep)
-    s.enter(update_interval, 1, update_news, argument=(search_terms))
-    if repeating: # schedules a repeating update in 24 hours (this is recursive)
-        s.enter(update_interval, 2, sched_news_update_repeat, argument=(s, search_terms))
+    s.enter(update_interval, 1, update_news)
+    if repeating: # will schedule a repeating update in after the interval
+        s.enter(update_interval, 2, sched_news_update_repeat, argument=(s,))
+        logger_cnh.info('repeat update scheduled')
     covid_news_sch[update_name] = s
 
 if __name__=='__main__':

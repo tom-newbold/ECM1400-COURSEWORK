@@ -29,8 +29,7 @@ from covid_news_handling import update_news, remove_title, schedule_news_updates
 import covid_news_handling # for globals
 
 update_covid_data()
-search_terms = load(open('config.json','r'))['news_search_terms']
-update_news(search_terms,sch=False)
+update_news(sch=False)
 
 updates = []
 news_articles = []
@@ -62,32 +61,31 @@ def index():
         if valid:
             update = {'title':update_args.get('two'),'content':content}
             updates.append(update) # adds to list of updates in interface
+            #logger_main.info('[updates=%s]',updates)
         else:
             logger_main.warning('invalid update - no sched time or selected target')
     ## scheduling updates
     if valid:
         u = update_args.get('update').split(':')
-        update_t_s = (int(u[0])*60 + int(u[1]))*60 # coverts scheduled update time to seconds
+        update_t_s = (int(u[0])*60 + int(u[1]) - 0.5)*60 # coverts scheduled update time to seconds
         t = localtime()
         current_t_s = (t[3]*60 + t[4])*60 + t[5] # converts current time to seconds
-        time_diff_s = (update_t_s-current_t_s-1)%(24*60*60) # calculates the interval using the difference (-1 ?)
+        time_diff_s = (update_t_s-current_t_s)%(24*60*60) # calculates the interval using the difference
         r = True if update_args.get('repeat') else False # checks if update should be repeated
         if update_args.get('covid-data'):
             covid_data_handler.schedule_covid_updates(time_diff_s,update_args.get('two'),r)
             logger_main.info('covid stats update scheduled')
             # schedules covid data updates
         if update_args.get('news'):
-            covid_news_handling.schedule_news_updates(time_diff_s,update_args.get('two'),search_terms,r)
+            covid_news_handling.schedule_news_updates(time_diff_s,update_args.get('two'),r)
             logger_main.info('covid news update scheduled')
             # schedules covid news story updates
-        #else:
-        #    logger_main.warning('no update scheduled - no target selected')
         return redirect(url_for('index')) # refreshes interface
     ## cancelling news stories
     if update_args.get('notif'):
         remove_title(update_args.get('notif')) # add title to removed_titles (so not displayed)
         logger_main.info('news story removed from interface')
-        update_news(search_terms,sch=False) # updates to fill article list
+        update_news(sch=False) # updates to fill article list
         return redirect(url_for('index')) # refreshes interface
     ## cancelling scheduled updates
     if update_args.get('update_item'):
@@ -107,16 +105,23 @@ def index():
         else:
             logger_main.warning('scheduler not found')
     ## running (refreshing) all schedulers
-    for scheduler in [covid_data_handler.covid_data_sch,covid_news_handling.covid_news_sch]: # botch to save me rewriting this bit
-        for sch in scheduler.keys():
-            scheduler[sch].run(blocking=False)
-            logger_main.info('scheduler %s refreshed',sch)
-            if scheduler[sch].empty(): # removes from list of updates if queue empty (i.e. update done)
-                scheduler.pop(sch)
-                for i in range(len(updates)):
-                    if updates[i]['title'] == sch:
-                        updates.pop(i)
-                        return redirect(url_for('index')) # refreshes interface
+    for schedulers in [covid_data_handler.covid_data_sch,covid_news_handling.covid_news_sch]: # botch to save me rewriting this bit
+        for s in list(schedulers):
+            if not schedulers[s].empty():
+                schedulers[s].run(blocking=False)
+            else: # removes from list of updates if queue empty (i.e. update done)
+                schedulers[s].run(blocking=False)
+                if schedulers[s].empty():
+                    schedulers.pop(s)
+                    logger_main.info('scheduler %s removed',s)
+                    i = 0
+                    while i < len(updates):
+                        if updates[i]['title'] == s:
+                            updates.pop(i)
+                        else:
+                            i += 1
+                    return redirect(url_for('index')) # refreshes interface
+            logger_main.info('scheduler %s refreshed',s)
     ## fills interface with values
     return render_template('index_updated.html',title='Covid Dashboard', location=area, local_7day_infections=last7days_cases_local,
                             nation_location=nation, national_7day_infections=last7days_cases_nation, hospital_cases='Hospital Cases: '+str(hospital_cases),
