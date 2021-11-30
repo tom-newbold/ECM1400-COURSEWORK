@@ -207,6 +207,7 @@ def schedule_covid_updates(update_interval, update_name, repeating=False):
     s.enter(update_interval, 1, update_covid_data)
     if repeating: # will schedule a repeating update in after the interval
         s.enter(update_interval, 2, sched_covid_update_repeat, argument=(s,))
+        logger_cdh.info('repeat update scheduled')
     covid_data_sch[update_name] = s
 
 if __name__=='__main__':
