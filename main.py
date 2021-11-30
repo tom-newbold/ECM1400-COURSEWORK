@@ -38,6 +38,7 @@ app = Flask('dashboard',static_folder=os.getcwd()+'\\static')
 
 @app.route('/index')
 def index():
+    global updates, news_articles
     area, last7days_cases_local, nation, last7days_cases_nation, hospital_cases, total_deaths = covid_data_handler.covid_data
     # extracts covid data from covid_data object
     news_articles = covid_news_handling.covid_news
@@ -46,6 +47,9 @@ def index():
     ## adding scheduled update to interface
     valid = update_args.get('update') # schedule update time
     if update_args.get('two'): # update label
+        if update_args.get('two') in [u['title'] for u in updates]:
+            logger_main.warning('label %s already in use')
+            return redirect(url_for('index'))
         content = ':'.join(update_args.get('update').split(':')) + ' ~ '
         if update_args.get('covid-data'):
             content += 'Covid Data'
@@ -61,7 +65,7 @@ def index():
         if valid:
             update = {'title':update_args.get('two'),'content':content}
             updates.append(update) # adds to list of updates in interface
-            #logger_main.info('[updates=%s]',updates)
+            updates = sorted(updates, key = lambda u : u['content']) # sorts updates by time in interface
         else:
             logger_main.warning('invalid update - no sched time or selected target')
     ## scheduling updates
