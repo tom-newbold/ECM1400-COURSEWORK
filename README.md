@@ -1,5 +1,4 @@
 # COVID Dashboard
-
 #####      > ECM1400 Coursework Project
 
 The aim of this coursework was to create a personalised data dashboard which would provide the user with up-to-data COVID statistics, along with relavant news stories.
