@@ -68,6 +68,7 @@ def index():
             updates = sorted(updates, key = lambda u : u['content']) # sorts updates by time in interface
         else:
             logger_main.warning('invalid update - no sched time or selected target')
+            return redirect(url_for('index'))
     ## scheduling updates
     if valid:
         u = update_args.get('update').split(':')
