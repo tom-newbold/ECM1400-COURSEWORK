@@ -1,0 +1,4 @@
+flask
+requests
+uk_covid19
+pytest
