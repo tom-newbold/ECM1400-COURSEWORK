@@ -6,15 +6,15 @@ The aim of this coursework was to create a personalised data dashboard which wou
 
 
 This was implemented using various modules, including:  
-- flask : Used to run the web application, implementing the interface using the *index.html* file provided  
-- sched : Used to schedule updates to the interface (statistics and news) at times specified by the user  
-- uk_covid19 and requests : Used to fetch data from the relavant APIs  
+- flask >> Used to run the web application, implementing the interface using the *index.html* file provided  
+- sched >> Used to schedule updates to the interface (statistics and news) at times specified by the user  
+- uk_covid19 and requests >> Used to fetch data from the relavant APIs  
 
 
 Along with other backend modules:  
-- json : Used to load API responses into a readable dictionary format  
-- logging : Used to track the program during runtime  
-- pytest : Used to run tests  
+- json >> Used to load API responses into a readable dictionary format  
+- logging >> Used to track the program during runtime  
+- pytest >> Used to run tests  
 
 ---
 
@@ -45,24 +45,24 @@ A summary of the functions from both supplementary modules is detailed below.
 
 
 covid_data_handler.
-- parse_csv_data() > see process_csv_data
-- process_csv_data() > used in conjunction to extract data from a static file
-- covid_API_request() > utilises the uk_covid19 module to request data
-- get_stats_from_json() > extracts a specific metric from json returned from the above function
-- get_covid_stats() > utilises the previous function to get a set of metrics for the interface
-- update_covid_data() > updates a global data structure with the output of the previous function
-- sched_covid_update_repeat() > recursively schedules update_covid_data every 24 hours
-- schedule_covid_updates() > schedules update_covid_data after an interval
+- parse_csv_data() >> see process_csv_data
+- process_csv_data() >> used in conjunction to extract data from a static file
+- covid_API_request() >> utilises the uk_covid19 module to request data
+- get_stats_from_json() >> extracts a specific metric from json returned from the above function
+- get_covid_stats() >> utilises the previous function to get a set of metrics for the interface
+- update_covid_data() >> updates a global data structure with the output of the previous function
+- sched_covid_update_repeat() >> recursively schedules update_covid_data every 24 hours
+- schedule_covid_updates() >> schedules update_covid_data after an interval
 
 
 covid_news_handling.
-- news_API_request()>: utilises the requests module to request news stories
-- format_news_article() > injects article information into a format compatible with the interface
-- remove_title() > marks an article as "seen"
-- purge_articles() > calls remove_title on all currently displayed articles
-- update_news() > updates a global data structure with (formatted) news articles
-- sched_news_update_repeat() > recursively schedules update_news every 24 hours
-- schedule_news_updates() > schedules update_news after an interval
+- news_API_request() >> utilises the requests module to request news stories
+- format_news_article() >> injects article information into a format compatible with the interface
+- remove_title() >> marks an article as "seen"
+- purge_articles() >> calls remove_title on all currently displayed articles
+- update_news() >> updates a global data structure with (formatted) news articles
+- sched_news_update_repeat() >> recursively schedules update_news every 24 hours
+- schedule_news_updates() >> schedules update_news after an interval
 
 ---
 
