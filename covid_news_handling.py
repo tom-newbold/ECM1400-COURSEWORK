@@ -59,6 +59,7 @@ def news_API_request(covid_terms=None,page_size=20):
             covid_terms = config_json['news_search_terms']
         _APIkey = config_json['api_keys']['news_api'] # get api key from config.json
         logger_cnh.info('API key fetched from config file')
+    if not isinstance(covid_terms,str) or _APIkey=='[api-key]': return
     keywords = covid_terms.split(' ')
     url = 'https://newsapi.org/v2/everything?q='+'+OR+'.join(keywords)+'&pageSize='+str(page_size)+'&apiKey='+_APIkey
     response = requests.get(url, auth=('user','pass')) # request related stories from newsAPI
@@ -82,6 +83,10 @@ def format_news_article(article_json):
                 content[str] : short description and ling (formatted with flask.Markup)
             }
     '''
+    if not isinstance(article_json,dict): return
+    for key in ['title','description','url','source']:
+        if key not in article_json: return
+    if 'name' not in article_json['source']: return
     return {'title':article_json['title'],'content':Markup(article_json['description']+
             '<a href=\"{url}\">{source}</a>'.format(url=article_json['url'],source=article_json['source']['name']))}
 
@@ -90,6 +95,7 @@ def remove_title(title):
         > args
             title[str] : title of article to be removed
     '''
+    if not isinstance(title,str): return
     global removed_titles
     if title not in removed_titles:
         removed_titles.append(title)
@@ -110,6 +116,7 @@ def update_news(covid_terms=None, article_count=10, sch=True):
     with open('config.json','r') as config:
         if not covid_terms:
             covid_terms = load(config)['news_search_terms']
+    if not isinstance(covid_terms,str): return
     global covid_news, removed_titles
     if sch:
         purge_articles()
@@ -132,19 +139,19 @@ def sched_news_update_repeat(sch):
         > args
             sch[sched.scheduler] : associated scheduler
     '''
+    if not isinstance(sch, sched.schedduler): return
     sch.enter(24*60*60, 1, update_news)
-    #if len(sch.queue) < 30:
     sch.enter(24*60*60, 2, sched_news_update_repeat, argument=(sch,))
-    logger_cnh.info('repeat update scheduled ')
+    logger_cnh.info('repeat update scheduled')
 
-def schedule_news_updates(update_interval, update_name, repeating=False, search_terms=None):
+def schedule_news_updates(update_interval, update_name, repeating=False):
     '''creates scheduler (stored in covid_news_sch) and schedules news updates
         > args
             update_interval[float] : delay of (initial) scheduled update
             update_name[str]       : label of update in interface - index of scheduler in covid_news_sch
             repeating[bool]        : flag for repeating updates (every 24 hours)
-            search_terms[str]      : search terms for news_api request
     '''
+    if not (update_interval > 0 or isinstance(update_name,str)): return
     global covid_news_sch
     s = sched.scheduler(time, sleep)
     s.enter(update_interval, 1, update_news)

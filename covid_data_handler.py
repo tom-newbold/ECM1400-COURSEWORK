@@ -110,6 +110,7 @@ def covid_API_request(location=None, location_type=None):
         if not location_type:
             location_type = config_json['location_type']
             logger_cdh.info('location_type fetched from config file')
+    if not (isinstance(location,str) or isinstance(location_type,str)): return
     area = ['areaType='+location_type, 'areaName='+location]
     metrics = {
         'date': 'date',
@@ -137,19 +138,21 @@ def get_stats_from_json(covid_stats_json, metric, count=1, skip=False):
             [str] : area code associated with api request
             [int] : extracted value
     '''
-    csj = covid_stats_json['data']
+    if not isinstance(covid_stats_json,dict): return
+    covid_stats_list = covid_stats_json['data']
+    if not isinstance(metric,str) or metric not in covid_stats_list[0].keys(): return
     data = []
     i = 0
     while len(data) < count:
-        val = csj[i][metric]
+        val = covid_stats_list[i][metric]
         if val != None:
             if skip:
                 skip = not skip
             else:
                 data.append(val)
         i += 1
-        if i >= len(csj): break
-    return csj[0]['areaName'], sum(data)
+        if i >= len(covid_stats_list): break
+    return covid_stats_list[0]['areaName'], sum(data)
 
 def get_covid_stats():
     '''fetches relevant statistics to be displayed in the interface
@@ -190,8 +193,8 @@ def sched_covid_update_repeat(sch):
         > args
             sch[sched.scheduler] : associated scheduler
     '''
+    if not isinstance(sch, sched.schedduler): return
     sch.enter(24*60*60, 1, update_covid_data)
-    #if len(sch.queue) < 30:
     sch.enter(24*60*60, 2, sched_covid_update_repeat, argument=(sch,))
     logger_cdh.info('repeat update scheduled')
 
@@ -202,6 +205,7 @@ def schedule_covid_updates(update_interval, update_name, repeating=False):
             update_name[str]       : label of update in interface - index of scheduler in covid_data_sch
             repeating[bool]        : flag for repeating updates (every 24 hours)
     '''
+    if not (update_interval > 0 or isinstance(update_name,str)): return
     global covid_data_sch
     s = sched.scheduler(time, sleep)
     s.enter(update_interval, 1, update_covid_data)
