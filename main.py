@@ -36,20 +36,16 @@ news_articles = []
 
 app = Flask('dashboard',static_folder=os.getcwd()+'\\static')
 
+
 @app.route('/index')
 def index():
     global updates, news_articles
-    area, last7days_cases_local, nation, last7days_cases_nation, hospital_cases, total_deaths = covid_data_handler.covid_data
-    # extracts covid data from covid_data object
-    news_articles = covid_news_handling.covid_news
-    # extracts covid-related news articles from covid_news object
     update_args = request.args # gets request
     ## adding scheduled update to interface
     valid = update_args.get('update') # schedule update time
     if update_args.get('two'): # update label
         if update_args.get('two') in [u['title'] for u in updates]:
             logger_main.warning('label %s already in use')
-            return redirect(url_for('index'))
         content = ':'.join(update_args.get('update').split(':')) + ' ~ '
         if update_args.get('covid-data'):
             content += 'Covid Data'
@@ -68,7 +64,6 @@ def index():
             updates = sorted(updates, key = lambda u : u['content']) # sorts updates by time in interface
         else:
             logger_main.warning('invalid update - no sched time or selected target')
-            return redirect(url_for('index'))
     ## scheduling updates
     if valid:
         u = update_args.get('update').split(':')
@@ -77,21 +72,20 @@ def index():
         current_t_s = (t[3]*60 + t[4])*60 + t[5] # converts current time to seconds
         time_diff_s = (update_t_s-current_t_s)%(24*60*60) # calculates the interval using the difference
         r = True if update_args.get('repeat') else False # checks if update should be repeated
+        label = update_args.get('two')
         if update_args.get('covid-data'):
-            covid_data_handler.schedule_covid_updates(time_diff_s,update_args.get('two'),r)
+            covid_data_handler.schedule_covid_updates(time_diff_s,label,r)
             logger_main.info('covid stats update scheduled')
             # schedules covid data updates
         if update_args.get('news'):
-            covid_news_handling.schedule_news_updates(time_diff_s,update_args.get('two'),r)
+            covid_news_handling.schedule_news_updates(time_diff_s,label,r)
             logger_main.info('covid news update scheduled')
             # schedules covid news story updates
-        return redirect(url_for('index')) # refreshes interface
     ## cancelling news stories
     if update_args.get('notif'):
         remove_title(update_args.get('notif')) # add title to removed_titles (so not displayed)
         logger_main.info('news story removed from interface')
         update_news(sch=False) # updates to fill article list
-        return redirect(url_for('index')) # refreshes interface
     ## cancelling scheduled updates
     if update_args.get('update_item'):
         s = None
@@ -106,28 +100,29 @@ def index():
                     updates.pop(i)
                     logging.info('scheduled update removed from interface')
                     break
-            return redirect(url_for('index')) # refreshes interface
         else:
             logger_main.warning('scheduler not found')
     ## running (refreshing) all schedulers
     for schedulers in [covid_data_handler.covid_data_sch,covid_news_handling.covid_news_sch]: # botch to save me rewriting this bit
         for s in list(schedulers):
-            if not schedulers[s].empty():
-                schedulers[s].run(blocking=False)
-            else: # removes from list of updates if queue empty (i.e. update done)
-                schedulers[s].run(blocking=False)
-                if schedulers[s].empty():
-                    schedulers.pop(s)
-                    logger_main.info('scheduler %s removed',s)
-                    i = 0
-                    while i < len(updates):
-                        if updates[i]['title'] == s:
-                            updates.pop(i)
-                        else:
-                            i += 1
-                    return redirect(url_for('index')) # refreshes interface
+            next_event_time = schedulers[s].run(blocking=False)
+            if next_event_time:
+                logger_main.info('time remaining for %s: %.2f', s, next_event_time)
+            else:# removes from list of updates if queue empty (i.e. update done)
+                schedulers.pop(s)
+                logger_main.info('scheduler %s removed',s)
+                i = 0
+                while i < len(updates):
+                    if updates[i]['title'] == s:
+                        updates.pop(i)
+                    else:
+                        i += 1
             logger_main.info('scheduler %s refreshed',s)
     ## fills interface with values
+    area, last7days_cases_local, nation, last7days_cases_nation, hospital_cases, total_deaths = covid_data_handler.covid_data
+    # extracts covid data from covid_data object
+    news_articles = covid_news_handling.covid_news
+    # extracts covid-related news articles from covid_news object
     return render_template('index_updated.html',title='Covid Dashboard', location=area, local_7day_infections=last7days_cases_local,
                             nation_location=nation, national_7day_infections=last7days_cases_nation, hospital_cases='Hospital Cases: '+str(hospital_cases),
                             deaths_total='Total Deaths: '+str(total_deaths), image='nhs_logo.png', updates=updates, news_articles=news_articles)
