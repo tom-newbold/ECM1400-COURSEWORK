@@ -25,16 +25,18 @@ with open('config.json','r') as config:
     logging.basicConfig(filename=os.getcwd()+load(config)['log_file_path'],
                         filemode='w',format=FORMAT,level=logging.INFO)
 
-def parse_csv_data(csv_filename):
+def parse_csv_data(csv_filename: str) -> list:
     '''return list of strings for rows in the file
         > args
             csv_filename[str] : filename of static csv file
         > returns
             [list] : lines in file
     '''
+    if not isinstance(csv_filename,str): return
+    if not os.path.exists(csv_filename): return
     return [line.strip('\n') for line in open(csv_filename, 'r').readlines()]
 
-def process_covid_csv_data(covid_csv_data):
+def process_covid_csv_data(covid_csv_data: list) -> tuple[int, int, int]:
     '''extract covid stats from csv format
         > args
             covid_csv_data[list] : list of lines from covid data csv - as returned from parse_csv_data
@@ -45,6 +47,8 @@ def process_covid_csv_data(covid_csv_data):
                 total_deaths[int]           : latest death toll
             )
     '''
+    if not isinstance(covid_csv_data,list): return
+    if len(covid_csv_data)==0: return
     last7days_cases = []
     i = 1
     prev_empty = True
@@ -82,7 +86,7 @@ def process_covid_csv_data(covid_csv_data):
 # arguments will be stored in config file
 from uk_covid19 import *
 from json import load
-def covid_API_request(location=None, location_type=None):
+def covid_API_request(location: str=None, location_type: str=None) -> dict:
     '''returns a json containing the set of metrics detailed in metrics[dict]
         > args
             location[str]      : area code for api request
@@ -91,8 +95,8 @@ def covid_API_request(location=None, location_type=None):
             [dict] : {
                 data[list][dict] : {
                     date[str]                     : [format YYYY-MM-DD]
-                    areaName[string]              : as specifed in area[list][str]
-                    areaType[string]              : see above
+                    areaName[str]                 : as specifed in area[list][str]
+                    areaType[str]                 : see above
                     newCasesByPublishDate[int]    : case count
                     cumDeaths28ByPublishDate[int] : death toll
                     hospitalCases[int]            : hospital cases
@@ -127,7 +131,7 @@ def covid_API_request(location=None, location_type=None):
 
 ## extra functions ----------------------------------------
 
-def get_stats_from_json(covid_stats_json, metric, count=1, skip=False):
+def get_stats_from_json(covid_stats_json: dict, metric: str, count: int=1, skip: bool=False) -> tuple[str, int]:
     '''extracts the specified metric from a json (returned from the covid API)
         > args
             covid_stats_json[dict] : raw json - as returned from covid_API_request
@@ -135,8 +139,10 @@ def get_stats_from_json(covid_stats_json, metric, count=1, skip=False):
             count[int]             : number of entries to cache (used for 7 day sums)
             skip[bool]             : flag for skiping first entry (more accurate for certain metrics)
         > returns
-            [str] : area code associated with api request
-            [int] : extracted value
+            [tuple] : (
+                [str] : area code associated with api request
+                [int] : extracted value
+            )
     '''
     if not isinstance(covid_stats_json,dict): return
     covid_stats_list = covid_stats_json['data']
@@ -154,7 +160,7 @@ def get_stats_from_json(covid_stats_json, metric, count=1, skip=False):
         if i >= len(covid_stats_list): break
     return covid_stats_list[0]['areaName'], sum(data)
 
-def get_covid_stats():
+def get_covid_stats() -> tuple[str, int, str, int, int, int]:
     '''fetches relevant statistics to be displayed in the interface
         > returns
             [tuple] : (
@@ -180,7 +186,7 @@ covid_data = []
 covid_data_sch = {}
 logger_cdh.info('covid data globals initialized')
 
-def update_covid_data():
+def update_covid_data() -> type(None):
     '''updates the covid_data data structure (global) with the latest stats'''
     global covid_data
     covid_data = get_covid_stats()
@@ -188,17 +194,17 @@ def update_covid_data():
 
 import sched
 from time import time, sleep
-def sched_covid_update_repeat(sch):
+def sched_covid_update_repeat(sch: sched.scheduler) -> type(None):
     '''uses recursion to implement 24 hour repeating updates
         > args
             sch[sched.scheduler] : associated scheduler
     '''
-    if not isinstance(sch, sched.schedduler): return
+    if not isinstance(sch, sched.scheduler): return
     sch.enter(24*60*60, 1, update_covid_data)
     sch.enter(24*60*60, 2, sched_covid_update_repeat, argument=(sch,))
     logger_cdh.info('repeat update scheduled')
 
-def schedule_covid_updates(update_interval, update_name, repeating=False):
+def schedule_covid_updates(update_interval: float, update_name: str, repeating: bool=False) -> type(None):
     '''creates scheduler (stored in covid_data_sch) and schedules news updates
         > args
             update_interval[float] : delay of (initial) scheduled update

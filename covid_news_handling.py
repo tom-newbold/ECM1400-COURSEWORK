@@ -25,7 +25,7 @@ with open('config.json','r') as config:
     logging.basicConfig(filename=os.getcwd()+load(config)['log_file_path'],
                         filemode='w',format=FORMAT,level=logging.INFO)
 
-def news_API_request(covid_terms=None,page_size=20):
+def news_API_request(covid_terms: str=None,page_size: int=20) -> dict:
     ''' get covid-related news stories from the news api
         > args
             covid_terms[str] : search terms for api request
@@ -73,7 +73,7 @@ covid_news_sch = {}
 logger_cnh.info('covid news globals initialized')
 
 from flask import Markup
-def format_news_article(article_json):
+def format_news_article(article_json: dict) -> dict:
     ''' formats news article into a dictionary which can be input into the flask template
         > args
             article_json[dict] : raw json representing a single article
@@ -90,7 +90,7 @@ def format_news_article(article_json):
     return {'title':article_json['title'],'content':Markup(article_json['description']+
             '<a href=\"{url}\">{source}</a>'.format(url=article_json['url'],source=article_json['source']['name']))}
 
-def remove_title(title):
+def remove_title(title: str) -> type(None):
     '''adds article to (global) list of removed articles, so it is not redisplayed when the interface is updated
         > args
             title[str] : title of article to be removed
@@ -101,12 +101,12 @@ def remove_title(title):
         removed_titles.append(title)
         logger_cnh.info('news story removed')
 
-def purge_articles():
+def purge_articles() -> type(None):
     '''removes all currently displayed articles (i.e. marked as seen, not redisplayed)'''
     for a in covid_news:
         remove_title(a['title'])
 
-def update_news(covid_terms=None, article_count=10, sch=True):
+def update_news(covid_terms: str=None, article_count: int=10, sch: bool=True) -> type(None):
     '''updates the covid_news data structure (global) with the latest articles
         > args
             covid_terms[str]   : search terms for news_api request - stored in config.json
@@ -134,17 +134,17 @@ def update_news(covid_terms=None, article_count=10, sch=True):
 
 import sched
 from time import time, sleep
-def sched_news_update_repeat(sch):
+def sched_news_update_repeat(sch: sched.scheduler) -> type(None):
     '''uses recursion to implement 24 hour repeating updates
         > args
             sch[sched.scheduler] : associated scheduler
     '''
-    if not isinstance(sch, sched.schedduler): return
+    if not isinstance(sch, sched.scheduler): return
     sch.enter(24*60*60, 1, update_news)
     sch.enter(24*60*60, 2, sched_news_update_repeat, argument=(sch,))
     logger_cnh.info('repeat update scheduled')
 
-def schedule_news_updates(update_interval, update_name, repeating=False):
+def schedule_news_updates(update_interval: float, update_name: str, repeating: bool=False) -> type(None):
     '''creates scheduler (stored in covid_news_sch) and schedules news updates
         > args
             update_interval[float] : delay of (initial) scheduled update
