@@ -43,6 +43,7 @@ def index():
     if update_args.get('two'): # update label
         if update_args.get('two') in [u['title'] for u in updates]:
             logger_main.warning('label %s already in use')
+            valid = False
         content = ':'.join(update_args.get('update').split(':')) + ' ~ '
         if update_args.get('covid-data'):
             content += 'Covid Data'
