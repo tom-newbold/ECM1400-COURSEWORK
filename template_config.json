@@ -1,7 +1,7 @@
 {
 	"location" : "Exeter",
 	"location_type" : "ltla",
-	"news_search_tems" : "Covid COVID-19 coronavirus",
+	"news_search_terms" : "Covid COVID-19 coronavirus",
 	"api_keys" : {
 		"news_api" : "[api-key]"
 	},
