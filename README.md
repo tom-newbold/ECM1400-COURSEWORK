@@ -318,6 +318,6 @@ This module handles: news-api requests; fetching (and formatting) new news stori
 
 ##### ECM1400 Programming Continuous Assessment
 
-This CA comprises 100% of the module assessment.
+This CA comprises 100% of the module assessment.  
 Set: 1st November 2021  
 Due: 10th December 2021 @ 11:59am  
