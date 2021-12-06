@@ -7,12 +7,14 @@ This module handles:
 '''
 
 ## imports
-from json import load
 import os
-from time import localtime, time, sleep
-import sched
-from flask import Flask, render_template, request, redirect, url_for
 import logging
+from json import load
+from time import localtime
+from flask import Flask, render_template, request
+## handler modules
+import covid_data_handler
+import covid_news_handling
 
 ## logging setup
 FORMAT = '%(levelname)s @ %(name)s [%(asctime)s]: %(message)s'
@@ -22,14 +24,8 @@ with open('config.json','r') as config:
                         filemode='w',format=FORMAT,level=logging.INFO)
 # debug, info, warning, error, critical
 
-## from handler modules
-from covid_data_handler import update_covid_data, schedule_covid_updates
-import covid_data_handler # for globals
-from covid_news_handling import update_news, remove_title, schedule_news_updates
-import covid_news_handling # for globals
-
-update_covid_data()
-update_news(sch=False)
+covid_data_handler.update_covid_data()
+covid_news_handling.update_news(sch=False)
 
 updates = []
 news_articles = []
@@ -39,6 +35,7 @@ app = Flask('dashboard',static_folder=os.getcwd()+'\\static')
 
 @app.route('/index')
 def index():
+    '''Handles incoming client requests, and injects values into the interface'''
     global updates, news_articles
     update_args = request.args # gets request
     ## adding scheduled update to interface
@@ -50,7 +47,7 @@ def index():
         if update_args.get('covid-data'):
             content += 'Covid Data'
             if update_args.get('news'):
-                 content += ' and News'
+                content += ' and News'
         elif update_args.get('news'):
             content += 'News'
         else:
@@ -61,17 +58,21 @@ def index():
         if valid:
             update = {'title':update_args.get('two'),'content':content}
             updates.append(update) # adds to list of updates in interface
-            updates = sorted(updates, key = lambda u : u['content']) # sorts updates by time in interface
+            updates = sorted(updates, key = lambda u : u['content'])
+            # sorts updates by time in interface
         else:
             logger_main.warning('invalid update - no sched time or selected target')
     ## scheduling updates
     if valid:
         u = update_args.get('update').split(':')
-        update_t_s = (int(u[0])*60 + int(u[1]) - 0.5)*60 # coverts scheduled update time to seconds
+        update_t_s = (int(u[0])*60 + int(u[1]) - 0.5)*60
+        # coverts scheduled update time to seconds
         t = localtime()
         current_t_s = (t[3]*60 + t[4])*60 + t[5] # converts current time to seconds
-        time_diff_s = (update_t_s-current_t_s)%(24*60*60) # calculates the interval using the difference
-        r = True if update_args.get('repeat') else False # checks if update should be repeated
+        time_diff_s = (update_t_s-current_t_s)%(24*60*60)
+        # calculates the interval using the difference
+        r = bool(update_args.get('repeat'))
+        # checks if update should be repeated
         label = update_args.get('two')
         if update_args.get('covid-data'):
             covid_data_handler.schedule_covid_updates(time_diff_s,label,r)
@@ -83,15 +84,17 @@ def index():
             # schedules covid news story updates
     ## cancelling news stories
     if update_args.get('notif'):
-        remove_title(update_args.get('notif')) # add title to removed_titles (so not displayed)
+        covid_news_handling.remove_title(update_args.get('notif')) # add title to removed_titles
         logger_main.info('news story removed from interface')
-        update_news(sch=False) # updates to fill article list
+        covid_news_handling.update_news(sch=False) # updates to fill article list
     ## cancelling scheduled updates
     if update_args.get('update_item'):
         s = None
-        for scheduler in [covid_data_handler.covid_data_sch,covid_news_handling.covid_news_sch]:
-            if update_args.get('update_item') in scheduler.keys():
-                s = scheduler[update_args.get('update_item')] # get scheduler from list by label
+        for scheduler in [covid_data_handler.covid_data_sch,
+                          covid_news_handling.covid_news_sch]:
+            if update_args.get('update_item') in scheduler:
+                s = scheduler[update_args.get('update_item')]
+                # get scheduler from list by label
                 list(map(s.cancel, s.queue)) # cancels all events in queue
         if s:
             logger_main.info('scheduled update cancelled')
@@ -103,7 +106,8 @@ def index():
         else:
             logger_main.warning('scheduler not found')
     ## running (refreshing) all schedulers
-    for schedulers in [covid_data_handler.covid_data_sch,covid_news_handling.covid_news_sch]: # botch to save me rewriting this bit
+    for schedulers in [covid_data_handler.covid_data_sch,
+                       covid_news_handling.covid_news_sch]:
         for s in list(schedulers):
             next_event_time = schedulers[s].run(blocking=False)
             if next_event_time:
@@ -119,13 +123,20 @@ def index():
                         i += 1
             logger_main.info('scheduler %s refreshed',s)
     ## fills interface with values
-    area, last7days_cases_local, nation, last7days_cases_nation, hospital_cases, total_deaths = covid_data_handler.covid_data
+    area, last7days_cases_local, nation = covid_data_handler.covid_data[:3]
+    last7days_cases_nation, hospital_cases, total_deaths = covid_data_handler.covid_data[3:]
     # extracts covid data from covid_data object
     news_articles = covid_news_handling.covid_news
     # extracts covid-related news articles from covid_news object
-    return render_template('index_updated.html',title='Covid Dashboard', location=area, local_7day_infections=last7days_cases_local,
-                            nation_location=nation, national_7day_infections=last7days_cases_nation, hospital_cases='Hospital Cases: '+str(hospital_cases),
-                            deaths_total='Total Deaths: '+str(total_deaths), image='nhs_logo.png', updates=updates, news_articles=news_articles)
+    return render_template('index_updated.html',title='Covid Dashboard',
+                           location=area,
+                           local_7day_infections=last7days_cases_local,
+                           nation_location=nation,
+                           national_7day_infections=last7days_cases_nation,
+                           hospital_cases='Hospital Cases: '+str(hospital_cases),
+                           deaths_total='Total Deaths: '+str(total_deaths),
+                           image='nhs_logo.png', updates=updates,
+                           news_articles=news_articles)
 
 if __name__=='__main__':
     app.run()
