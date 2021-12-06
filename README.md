@@ -64,6 +64,30 @@ covid_news_handling.
 - sched_news_update_repeat() >> recursively schedules update_news every 24 hours
 - schedule_news_updates() >> schedules update_news after an interval
 
+#### Docstrings
+
+Below are the docstrings for each module, and the contained functions
+
+##### main
+
+This module handles: the main flask application; incoming client requests  
+(leading to scheduling/cancelling updates) and updates to the interface  
+(by passsing values into the template).
+
+##### covid_data_handler
+
+This module handles: uk-covid-19 api requests; fetching up to date stats  
+and scheduling stats updates.
+
+parse_csv_data(csv_filename: str) -> list:  
+    Returns list of strings for rows in the file.  
+   
+    Args:  
+        csv_filename: Filename of static csv file  
+  
+    Returns:  
+        Lines from file  
+
 ---
 
 ## Other Details
