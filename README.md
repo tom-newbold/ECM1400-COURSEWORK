@@ -70,14 +70,12 @@ Below are the docstrings for each module, and the contained functions
 
 ##### main
 
-This module handles: the main flask application; incoming client requests  
-(leading to scheduling/cancelling updates) and updates to the interface  
-(by passsing values into the template).
+This module handles: the main flask application; incoming client requests (leading to scheduling/cancelling  
+updates) and updates to the interface (by passsing values into the template).  
 
 ##### covid_data_handler
 
-This module handles: uk-covid-19 api requests; fetching up to date stats  
-and scheduling stats updates.
+This module handles: uk-covid-19 api requests; fetching up to date stats and scheduling stats updates.  
 
     parse_csv_data(csv_filename: str) -> list:
         Returns list of strings for rows in the file.
@@ -87,6 +85,7 @@ and scheduling stats updates.
   
         Returns:
             Lines from file
+
 
     process_covid_csv_data(covid_csv_data: list) -> tuple[int, int, int]:
         Extracts covid stats from csv format.
@@ -100,6 +99,7 @@ and scheduling stats updates.
             last7days_cases_total: Summative latest week case count
             current_hospital_cases: Current hospital cases
             total_deaths: Latest death toll
+
 
     covid_API_request(location: str=None, location_type: str=None) -> dict:
         Returns a json containing the set of metrics.
@@ -126,6 +126,7 @@ and scheduling stats updates.
                 totalPages[int]: number of pages fetched from api
             }
 
+
     get_stats_from_json(covid_stats_json: dict, metric: str, count: int=1, skip: bool=False) -> tuple[str, int]:
         Extracts the specified metric from a json.
 
@@ -137,6 +138,7 @@ and scheduling stats updates.
 
         Returns:
             The area code associated with the api request, along with the value requested.
+
 
     get_covid_stats() -> tuple[str, int, str, int, int, int]:
         Fetches relevant statistics to be displayed in the interface.
@@ -152,8 +154,10 @@ and scheduling stats updates.
             hospital_cases: current hospital cases
             total_deaths: cumulative death toll
 
+
     update_covid_data() -> type(None):
         Updates the covid_data data structure (global) with the latest stats.
+
 
     sched_covid_update_repeat(sch: sched.scheduler) -> type(None):
         Uses recursion to implement 24 hour repeating updates.
@@ -161,12 +165,106 @@ and scheduling stats updates.
         Args:
             sch: associated scheduler
 
+
     schedule_covid_updates(update_interval: float, update_name: str, repeating: bool=False) -> type(None):
         Creates scheduler (stored in covid_data_sch) and schedules news updates.
 
         Args:
             update_interval: delay of (initial) scheduled update
             update_name: label of update in interface - index of scheduler in covid_data_sch
+            repeating: flag for repeating updates (every 24 hours)
+
+##### covid_news_handling
+
+This module handles: news-api requests; fetching (and formatting) new news stories; scheduling these news updates.  
+
+    news_API_request(covid_terms: str=None,page_size: int=20) -> dict:
+        Fetches covid-related news stories from the news api.
+
+        Args:
+            covid_terms: search terms for api request
+            page_size: number of articles fetched from api
+
+        Returns:
+            A dictionary containing news articles returned from the api.
+            The format of the returned dictionary, along with types, it detailed below.
+        
+            Expected (i.e. no error):
+            {
+                status[str]: flag for request successful, "ok"
+                totalResults[int]: article count
+                articles[list][dict]: {
+                    source[dict]: {
+                        id[str]: identifier
+                        name[str]: display name
+                    }
+                    author[str]: author name
+                    title[str]: article title
+                    description[str]: short description of article
+                    url[str]: link to article
+                    urlToImage[str]: link to related image for article
+                    publishedAt[str]: %format YYYY-MM-DDtime
+                    content[str]: article content, max 200 characters
+                }
+            }
+
+            Exception (i.e. error):
+            {
+                staus[str]: as before, "error"
+                code[str]: see https://newsapi.org/docs/errors, (200, 400, 401, 429, 500)
+                message[str]: error description
+            }
+
+
+    format_news_article(article_json: dict) -> dict:
+        Formats news article into a dictionary which can be input into the flask template.
+
+        Args:
+            article_json: raw json representing a single article
+
+        Returns:
+            A dictionary representing a news article.
+            The format of the returned dictionary, along with types, it detailed below.
+
+            {
+                title[str]: title of article
+                content[str]: short description and ling (formatted with flask.Markup)
+            }
+
+
+    remove_title(title: str) -> type(None):
+        Adds article to (global) list of removed articles, so it is not redisplayed when the interface is updated.
+
+        Args:
+            title: title of article to be removed
+
+
+    purge_articles() -> type(None):
+        Removes all currently displayed articles (i.e. marked as seen, not redisplayed).
+
+
+    update_news(covid_terms: str=None, article_count: int=10, sch: bool=True) -> type(None):
+        Updates the covid_news data structure (global) with the latest articles.
+
+        Args:
+            covid_terms: search terms for news_api request - stored in config.json
+            article_count: number of articles to be displayed in the interface
+            sch: flag for scheduled (over intermittent) updates
+
+
+    sched_news_update_repeat(sch: sched.scheduler) -> type(None):
+        Uses recursion to implement 24 hour repeating updates.
+
+        Args:
+            sch: associated scheduler
+
+
+    schedule_news_updates(update_interval: float, update_name: str, repeating: bool=False) -> type(None):
+        Creates scheduler (stored in covid_news_sch) and schedules news updates.
+
+        Args:
+            update_interval: delay of (initial) scheduled update
+            update_name: label of update in interface, index of scheduler in covid_news_sch
             repeating: flag for repeating updates (every 24 hours)
 
 ---
