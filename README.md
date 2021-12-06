@@ -79,27 +79,95 @@ This module handles: the main flask application; incoming client requests
 This module handles: uk-covid-19 api requests; fetching up to date stats  
 and scheduling stats updates.
 
-    parse_csv_data(csv_filename: str) -> list:  
-        Returns list of strings for rows in the file.  
+    parse_csv_data(csv_filename: str) -> list:
+        Returns list of strings for rows in the file.
    
-        Args:  
-            csv_filename: Filename of static csv file  
+        Args:
+            csv_filename: Filename of static csv file
   
-        Returns:  
-            Lines from file  
+        Returns:
+            Lines from file
 
-    process_covid_csv_data(covid_csv_data: list) -> tuple[int, int, int]:  
-        Extracts covid stats from csv format.  
+    process_covid_csv_data(covid_csv_data: list) -> tuple[int, int, int]:
+        Extracts covid stats from csv format.
     
-        Args:  
-            covid_csv_data : List of lines from covid data csv - as returned from parse_csv_data  
+        Args:
+            covid_csv_data : List of lines from covid data csv - as returned from parse_csv_data
 
-        Returns:  
-            Three metrics, detailed below, from the csv lines list.  
+        Returns:
+            Three metrics, detailed below, from the csv lines list.
 
             last7days_cases_total: Summative latest week case count
             current_hospital_cases: Current hospital cases
             total_deaths: Latest death toll
+
+    covid_API_request(location: str=None, location_type: str=None) -> dict:
+        Returns a json containing the set of metrics.
+
+        Args:
+            location: Area code for api request
+            location_type: Area type for api request
+
+        Returns:
+            A dictionary containing the metrics specified in the metrics[dict] variable.
+            The format of the returned dictionary, along with types, is detailed below.
+
+            {
+                data[list][dict] : {
+                    date[str]: %format YYYY-MM-DD
+                    areaName[str]: as specifed in area[list][str]
+                    areaType[str]: see above
+                    newCasesByPublishDate[int]: case count
+                    cumDeaths28ByPublishDate[int]: death toll
+                    hospitalCases[int]: hospital cases
+                }
+                lastUpdate[str]: time of latest entry, %format YYYY-MM-DDtime
+                length[int]: number of entries fetched from api
+                totalPages[int]: number of pages fetched from api
+            }
+
+    get_stats_from_json(covid_stats_json: dict, metric: str, count: int=1, skip: bool=False) -> tuple[str, int]:
+        Extracts the specified metric from a json.
+
+        Args:
+            covid_stats_json: raw json - as returned from covid_API_request
+            metric: stat to extract
+            count: number of entries to cache (used for 7 day sums)
+            skip: flag for skiping first entry (more accurate for certain metrics)
+
+        Returns:
+            The area code associated with the api request, along with the value requested.
+
+    get_covid_stats() -> tuple[str, int, str, int, int, int]:
+        Fetches relevant statistics to be displayed in the interface.
+
+        Returns:
+            Area codes (local and national), along with 4 statistics.
+            Detailed below.
+        
+            area: local area code - stored in config.json
+            last7days_cases_local: summative previous week case count (local)
+            nation: nation area code
+            last7days_cases_nation: summative previous week case count (nation)
+            hospital_cases: current hospital cases
+            total_deaths: cumulative death toll
+
+    update_covid_data() -> type(None):
+        Updates the covid_data data structure (global) with the latest stats.
+
+    sched_covid_update_repeat(sch: sched.scheduler) -> type(None):
+        Uses recursion to implement 24 hour repeating updates.
+
+        Args:
+            sch: associated scheduler
+
+    schedule_covid_updates(update_interval: float, update_name: str, repeating: bool=False) -> type(None):
+        Creates scheduler (stored in covid_data_sch) and schedules news updates.
+
+        Args:
+            update_interval: delay of (initial) scheduled update
+            update_name: label of update in interface - index of scheduler in covid_data_sch
+            repeating: flag for repeating updates (every 24 hours)
 
 ---
 
