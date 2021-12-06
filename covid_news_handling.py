@@ -1,4 +1,5 @@
-'''This module handles: news-api requests; fetching (and formatting) new news stories; scheduling these news updates.
+'''This module handles: news-api requests; fetching (and formatting) new news
+stories and scheduling these news updates.
 
 Below is a summary of the functions defined within this module
 
@@ -19,10 +20,13 @@ covid_news_handling
         > schedules update_news after an interval
 '''
 
-from json import load
-import requests
 import os
 import logging
+import sched
+from time import time, sleep
+from json import load
+import requests
+from flask import Markup
 
 ## logging setup
 FORMAT = '%(levelname)s @ %(name)s [%(asctime)s]: %(message)s'
@@ -41,7 +45,7 @@ def news_API_request(covid_terms: str=None,page_size: int=20) -> dict:
     Returns:
         A dictionary containing news articles returned from the api.
         The format of the returned dictionary, along with types, it detailed below.
-        
+
         Expected (i.e. no error):
         {
             status[str]: flag for request successful, "ok"
@@ -74,9 +78,11 @@ def news_API_request(covid_terms: str=None,page_size: int=20) -> dict:
             covid_terms = config_json['news_search_terms']
         _APIkey = config_json['api_keys']['news_api'] # get api key from config.json
         logger_cnh.info('API key fetched from config file')
-    if not isinstance(covid_terms,str) or _APIkey=='[api-key]': return
+    if not isinstance(covid_terms,str) or _APIkey=='[api-key]':
+        return
     keywords = covid_terms.split(' ')
-    url = 'https://newsapi.org/v2/everything?q='+'+OR+'.join(keywords)+'&pageSize='+str(page_size)+'&apiKey='+_APIkey
+    url = 'https://newsapi.org/v2/everything?q='+'+OR+'.join(keywords)
+    url +='&pageSize='+str(page_size)+'&apiKey='+_APIkey
     response = requests.get(url, auth=('user','pass')) # request related stories from newsAPI
     logger_cnh.info('news API request [url=%s]',url)
     return response.json()
@@ -87,7 +93,6 @@ removed_titles = []
 covid_news_sch = {}
 logger_cnh.info('covid news globals initialized')
 
-from flask import Markup
 def format_news_article(article_json: dict) -> dict:
     '''Formats news article into a dictionary which can be input into the flask template.
 
@@ -103,20 +108,28 @@ def format_news_article(article_json: dict) -> dict:
             content[str]: short description and ling (formatted with flask.Markup)
         }
     '''
-    if not isinstance(article_json,dict): return
+    if not isinstance(article_json,dict):
+        return
     for key in ['title','description','url','source']:
-        if key not in article_json: return
-    if 'name' not in article_json['source']: return
-    return {'title':article_json['title'],'content':Markup(article_json['description']+
-            '<a href=\"{url}\">{source}</a>'.format(url=article_json['url'],source=article_json['source']['name']))}
+        if key not in article_json:
+            return
+    if 'name' not in article_json['source']:
+        return
+    url=article_json['url']
+    source=article_json['source']['name']
+    return {'title':article_json['title'],
+            'content':Markup(article_json['description']+
+            f'<a href=\"{url}\">{source}</a>')}
 
 def remove_title(title: str) -> type(None):
-    '''Adds article to (global) list of removed articles, so it is not redisplayed when the interface is updated.
+    '''Adds article to (global) list of removed articles,
+    so it is not redisplayed when the interface is updated.
 
     Args:
         title: title of article to be removed
     '''
-    if not isinstance(title,str): return
+    if not isinstance(title,str):
+        return
     global removed_titles
     if title not in removed_titles:
         removed_titles.append(title)
@@ -127,7 +140,8 @@ def purge_articles() -> type(None):
     for a in covid_news:
         remove_title(a['title'])
 
-def update_news(covid_terms: str=None, article_count: int=10, sch: bool=True) -> type(None):
+def update_news(covid_terms: str=None, article_count: int=10,
+                sch: bool=True) -> type(None):
     '''Updates the covid_news data structure (global) with the latest articles.
 
     Args:
@@ -138,8 +152,9 @@ def update_news(covid_terms: str=None, article_count: int=10, sch: bool=True) ->
     with open('config.json','r') as config:
         if not covid_terms:
             covid_terms = load(config)['news_search_terms']
-    if not isinstance(covid_terms,str): return
-    global covid_news, removed_titles
+    if not isinstance(covid_terms,str):
+        return
+    global covid_news
     if sch:
         purge_articles()
     api = news_API_request(covid_terms,article_count+len(removed_titles))['articles']
@@ -154,20 +169,20 @@ def update_news(covid_terms: str=None, article_count: int=10, sch: bool=True) ->
         i += 1
     logger_cnh.info('covid news updated')
 
-import sched
-from time import time, sleep
 def sched_news_update_repeat(sch: sched.scheduler) -> type(None):
     '''Uses recursion to implement 24 hour repeating updates.
 
     Args:
         sch: associated scheduler
     '''
-    if not isinstance(sch, sched.scheduler): return
+    if not isinstance(sch, sched.scheduler):
+        return
     sch.enter(24*60*60, 1, update_news)
     sch.enter(24*60*60, 2, sched_news_update_repeat, argument=(sch,))
     logger_cnh.info('repeat update scheduled')
 
-def schedule_news_updates(update_interval: float, update_name: str, repeating: bool=False) -> type(None):
+def schedule_news_updates(update_interval: float, update_name: str,
+                          repeating: bool=False) -> type(None):
     '''Creates scheduler (stored in covid_news_sch) and schedules news updates.
 
     Args:
@@ -175,7 +190,8 @@ def schedule_news_updates(update_interval: float, update_name: str, repeating: b
         update_name: label of update in interface, index of scheduler in covid_news_sch
         repeating: flag for repeating updates (every 24 hours)
     '''
-    if not (update_interval > 0 or isinstance(update_name,str)): return
+    if not (update_interval > 0 or isinstance(update_name,str)):
+        return
     global covid_news_sch
     s = sched.scheduler(time, sleep)
     s.enter(update_interval, 1, update_news)
@@ -185,4 +201,6 @@ def schedule_news_updates(update_interval: float, update_name: str, repeating: b
     covid_news_sch[update_name] = s
 
 if __name__=='__main__':
-    print(news_API_request(load(open('config.json','r'))['news_search_terms'])['articles'][0]) # first article
+    with open('config.json','r') as config:
+        api = news_API_request(load(config)['news_search_terms'])
+        print(api['articles'][0]) # first article
