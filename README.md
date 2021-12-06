@@ -79,14 +79,14 @@ This module handles: the main flask application; incoming client requests
 This module handles: uk-covid-19 api requests; fetching up to date stats  
 and scheduling stats updates.
 
-parse_csv_data(csv_filename: str) -> list:  
-    Returns list of strings for rows in the file.  
+    parse_csv_data(csv_filename: str) -> list:  
+        Returns list of strings for rows in the file.  
    
-    Args:  
-        csv_filename: Filename of static csv file  
+        Args:  
+            csv_filename: Filename of static csv file  
   
-    Returns:  
-        Lines from file  
+        Returns:  
+            Lines from file  
 
 ---
 
