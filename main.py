@@ -128,7 +128,7 @@ def index():
     # extracts covid data from covid_data object
     news_articles = covid_news_handling.covid_news
     # extracts covid-related news articles from covid_news object
-    return render_template('index_updated.html',title='Covid Dashboard',
+    return render_template('index.html',title='Covid Dashboard',
                            location=area,
                            local_7day_infections=last7days_cases_local,
                            nation_location=nation,
