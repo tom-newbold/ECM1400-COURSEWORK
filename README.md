@@ -26,13 +26,11 @@ This project is intended to be run using Python 3.9 (64-bit)
 
 #### Installing Required Modules
 
-A list of modules to be installed can be found in *requirements.txt*.  
-Installing these modules can be done by running *requirements.bat*, or manually by executing `pip install -r requirements.txt` in the project directory
+A list of modules to be installed can be found in *requirements.txt*. Installing these modules can be done by running *requirements.bat*, or manually by executing `pip install -r requirements.txt` in the project directory.
 
 #### API key
 
-In order for news stories to be displayed, a key for the NewsAPI is required.  
-Visit <https://newsapi.org/> and create a free account. Open *config_template.json*, and replace `[api-key]` with your key. Once this is done, make sure to rename this file to *config.json*.
+In order for news stories to be displayed, a key for the NewsAPI is required. Visit <https://newsapi.org/> and create a free account. Open *config_template.json*, and replace `[api-key]` with your key. Once this is done, make sure to rename this file to *config.json*.
 
 #### Personalising
 
@@ -56,6 +54,23 @@ There is also a set of tests for the validity of the *config.json* file.
 ---
 
 ## Developer Documentation
+
+#### External Module Documentation
+
+Below is a list of links to the documentation for any modules used in this project.
+
+Standard Library:
+- [json]<https://docs.python.org/3/library/json.html>
+- [logging]<https://docs.python.org/3/library/logging.html>
+- [os]<https://docs.python.org/3/library/os.html>
+- [sched]<https://docs.python.org/3/library/sched.html>
+- [time]<https://docs.python.org/3/library/time.html>
+
+Third-Party:
+- [flask]<https://flask.palletsprojects.com/en/2.0.x/>
+- [pytest]<https://docs.pytest.org/en/6.2.x/>
+- [requests]<https://pypi.org/project/requests/>
+- [uk_covid19]<https://publichealthengland.github.io/coronavirus-dashboard-api-python-sdk/>
 
 #### Function Summary
 
@@ -296,3 +311,13 @@ This module handles: news-api requests; fetching (and formatting) new news stori
 
 **Thomas Newbold**  
 <tn337@exeter.ac.uk>
+
+#### Specification
+
+<https://vle.exeter.ac.uk/pluginfile.php/2954508/mod_label/intro/CA-specification.pdf>
+
+##### ECM1400 Programming Continuous Assessment
+
+This CA comprises 100% of the module assessment.
+Set: 1st November 2021  
+Due: 10th December 2021 @ 11:59am  
