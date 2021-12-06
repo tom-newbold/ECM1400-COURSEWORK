@@ -88,6 +88,19 @@ and scheduling stats updates.
         Returns:  
             Lines from file  
 
+    process_covid_csv_data(covid_csv_data: list) -> tuple[int, int, int]:  
+        Extracts covid stats from csv format.  
+    
+        Args:  
+            covid_csv_data : List of lines from covid data csv - as returned from parse_csv_data  
+
+        Returns:  
+            Three metrics, detailed below, from the csv lines list.  
+
+            last7days_cases_total: Summative latest week case count
+            current_hospital_cases: Current hospital cases
+            total_deaths: Latest death toll
+
 ---
 
 ## Other Details
