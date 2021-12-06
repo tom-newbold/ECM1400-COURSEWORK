@@ -3,7 +3,7 @@ This module handles:
     > the main flask application
     > incoming client requests
         (leading to scheduling/cancelling updates)
-    > updates to the interface (by passsing values into the template)
+    > updates to the interface (by passing values into the template)
 '''
 
 ## imports

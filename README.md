@@ -2,13 +2,13 @@
 
 ### ECM1400 Coursework Project
 
-The aim of this coursework was to create a personalised data dashboard which would provide the user with up-to-data COVID statistics, along with relavant news stories.
+The aim of this coursework was to create a personalized data dashboard which would provide the user with up-to-data COVID statistics, along with relavant news stories.
 
 
 This was implemented using various modules, including:  
 - flask >> Used to run the web application, implementing the interface using the *index.html* file provided  
 - sched >> Used to schedule updates to the interface (statistics and news) at times specified by the user  
-- uk_covid19 and requests >> Used to fetch data from the relavant APIs  
+- uk_covid19 and requests >> Used to fetch data from the relevant APIs  
 
 
 Along with other backend modules:  
@@ -18,26 +18,44 @@ Along with other backend modules:
 
 ---
 
-## Prequisites / Installation
+## Prerequisites / Installation
+
+#### Python Version
+
+This project is intended to be run using Python 3.9 (64-bit)
 
 #### Installing Required Modules
 
-A list of modules to be installed can be found in *requirements.txt*. Installing these modules can be done by running *requirements.bat*, or manually by executing `pip install -r requirements.txt` in the project directory
+A list of modules to be installed can be found in *requirements.txt*.  
+Installing these modules can be done by running *requirements.bat*, or manually by executing `pip install -r requirements.txt` in the project directory
 
 #### API key
 
 In order for news stories to be displayed, a key for the NewsAPI is required.  
 Visit <https://newsapi.org/> and create a free account. Open *config_template.json*, and replace `[api-key]` with your key. Once this is done, make sure to rename this file to *config.json*.
 
+#### Personalising
+
+To display Covid stats for a different location, change the "location" in *config.json* to the desired location.
+To change the search criteria for the displayed news stories, modify "news_search_terms" in *config.json* (if using multiple search terms, separate each term with a space).
+
 #### Running the Dashboard
 
 Now, to start the dashboard, run *dashboard.bat*. This will automatically run the test suite, host the flask application, and open the correct url in the default browser.
 
+#### Runtime Errors
+
+Any runtime errors are logged in the .log file (*/\_\_log\_\_/dashboard_log.log* by default, but this can be modified from within the config file).
+
+#### Testing
+
+To manually run the test suite, execute `python -m pytest` in the project directory.  
+The test suite contains tests for both modules, including tests for accessing the api.  
+There is also a set of tests for the validity of the *config.json* file.
+
 ---
 
 ## Developer Documentation
-
-This project is intended to be run using Python 3.9 (64-bit)
 
 #### Function Summary
 
@@ -71,7 +89,7 @@ Below are the docstrings for each module, and the contained functions
 ##### main
 
 This module handles: the main flask application; incoming client requests (leading to scheduling/cancelling  
-updates) and updates to the interface (by passsing values into the template).  
+updates) and updates to the interface (by passing values into the template).  
 
     index():
         Handles incoming client requests, and injects values into the interface
