@@ -73,6 +73,9 @@ Below are the docstrings for each module, and the contained functions
 This module handles: the main flask application; incoming client requests (leading to scheduling/cancelling  
 updates) and updates to the interface (by passsing values into the template).  
 
+    index():
+        Handles incoming client requests, and injects values into the interface
+
 ##### covid_data_handler
 
 This module handles: uk-covid-19 api requests; fetching up to date stats and scheduling stats updates.  
