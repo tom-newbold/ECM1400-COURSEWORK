@@ -60,17 +60,17 @@ There is also a set of tests for the validity of the *config.json* file.
 Below is a list of links to the documentation for any modules used in this project.
 
 Standard Library:
-- [json]<https://docs.python.org/3/library/json.html>
-- [logging]<https://docs.python.org/3/library/logging.html>
-- [os]<https://docs.python.org/3/library/os.html>
-- [sched]<https://docs.python.org/3/library/sched.html>
-- [time]<https://docs.python.org/3/library/time.html>
+- [json](https://docs.python.org/3/library/json.html)
+- [logging](https://docs.python.org/3/library/logging.html>)
+- [os](https://docs.python.org/3/library/os.html)
+- [sched](https://docs.python.org/3/library/sched.html)
+- [time](https://docs.python.org/3/library/time.html)
 
 Third-Party:
-- [flask]<https://flask.palletsprojects.com/en/2.0.x/>
-- [pytest]<https://docs.pytest.org/en/6.2.x/>
-- [requests]<https://pypi.org/project/requests/>
-- [uk_covid19]<https://publichealthengland.github.io/coronavirus-dashboard-api-python-sdk/>
+- [flask](https://flask.palletsprojects.com/en/2.0.x/)
+- [pytest](https://docs.pytest.org/en/6.2.x/)
+- [requests](https://pypi.org/project/requests/)
+- [uk_covid19](https://publichealthengland.github.io/coronavirus-dashboard-api-python-sdk/)
 
 #### Function Summary
 
